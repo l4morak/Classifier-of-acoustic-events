@@ -600,7 +600,7 @@ for a in range(5):
     
 preds /= 5
 
-f = open('E:/AudioData/reward_baseline.txt', 'w')
+f = open(root_dir + '/result.txt', 'w')
 for num, song in enumerate(test_list):
     l = preds[num].argmax()
     if l == 0:
