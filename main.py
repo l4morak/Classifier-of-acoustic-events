@@ -461,7 +461,7 @@ for num, name in enumerate(list_of_files):
     
 for num, name in enumerate(list_of_file_esc):
     samp, fr = wavfile.read(root_dir + "/ESC-50-master/audio/" + str(name))
-    X[num+1881] = preprocess_sound(fr, samp).reshape(496,64)
+    X[num+3659] = preprocess_sound(fr, samp).reshape(496,64)
     
 
 test_list = os.listdir(root_dir + "/test/")
@@ -527,48 +527,9 @@ for a in range(120):
         score[6] = 1
     elif asdf in ['tool']:
         score[7] = 1
-    y[1881+a] = score
+    y[3659+a] = score
     
 
-y_test = np.zeros((473, 8))
-for num, name in enumerate(test_list):
-    if name.split('_')[0] == 'background':
-        lbl = 'background'
-    elif name.split('_')[0] in ['bg','bags']:
-        lbl = 'bags'
-    elif name.split('_')[0] in ['door','d']:
-        lbl = 'door'
-    elif name.split('_')[0] in ['k', 'keyboard']:
-        lbl = 'keyboard'
-    elif name.split('_')[0] in ['knocking', 'kd']:
-        lbl = 'kd'
-    elif name.split('_')[0] in ['ring']:
-        lbl = 'ring'
-    elif name.split('_')[0] in ['speech']:
-        lbl = 'speech'
-    elif name.split('_')[0] in ['tool']:
-        lbl = 'tool'
-    elif name.split('_')[0] in ['unknown']:
-        break
-    asdf = lbl
-    score = np.zeros((8))
-    if asdf == 'background':
-        score[0] = 1
-    elif asdf in ['bg','bags']:
-        score[1] = 1
-    elif asdf in ['door','d']:
-        score[2] = 1
-    elif asdf in ['k', 'keyboard']:
-        score[3] = 1
-    elif asdf in ['knocking', 'kd']:
-        score[4] = 1
-    elif asdf in ['ring']:
-        score[5] = 1
-    elif asdf in ['speech']:
-        score[6] = 1
-    elif asdf in ['tool']:
-        score[7] = 1
-    y_test[num] = score
 
 mod_vgg = VGGish(include_top=False)
 x_d = mod_vgg.predict(X.reshape(-1,496,64,1), verbose=1)
