@@ -554,12 +554,12 @@ def model_end():
     return model
 
 preds = np.zeros((610,8))
-for a in range(5):
+for a in range(10):
     model_end()
     models.append(load_model(root_dir + "/model.hdf5"))
     preds += models[a].predict(data)
     
-preds /= 5
+preds /= 10
 
 f = open(root_dir + '/result.txt', 'w')
 for num, song in enumerate(test_list):
