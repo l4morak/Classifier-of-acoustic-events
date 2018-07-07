@@ -1,5 +1,5 @@
 # Classifier of Acoustic Events
-Решение задачи "Классификатор акустических событий". 
+Решение задачи "Классификатор акустических событий". (файл main.py)
 
 Средняя точность на известных объектах test выборки - 82-83 % (Accuracy Score); 97.5 % (ROC AUC Score); 86 % (Mean Average Precision).  
 Для обучения модели также использовался датасет ESC-50. (https://github.com/karoldvl/ESC-50)
