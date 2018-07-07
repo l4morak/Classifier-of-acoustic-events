@@ -612,7 +612,7 @@ for num, song in enumerate(test_list):
     elif l==3:
         lbl = 'keyboard'
     elif l==4:
-        lbl = 'kd'
+        lbl = 'knocking_door'
     elif l==5:
         lbl = 'ring'
     elif l==6:
