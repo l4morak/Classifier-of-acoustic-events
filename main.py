@@ -580,7 +580,7 @@ def model_end():
     inp = Input((512,))
     x = Dense(800)(inp)
     x = Dropout(0.2)(x)
-    x = Dense(800)(x) #105 - 0.9429 0.1744s
+    x = Dense(800)(x)
     x = Dropout(0.4)(x)
     x = Activation('relu')(x)
     x = Dense(8)(x)
