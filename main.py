@@ -37,8 +37,6 @@ np.random.seed(42)
 
 root_dir = "E:/AudioData"
 
-esc = pd.read_csv(root_dir + "/ESC-50-master/meta/esc50.csv")
-
 def frame(data, window_length, hop_length):
   """Convert array into a sequence of successive possibly overlapping frames.
   An n-dimensional array of shape (num_samples, ...) is converted into an
@@ -436,31 +434,11 @@ for c in range(1000000):
 del list_of_files[len(list_of_files)-1]
 random.shuffle(list_of_files)
 
-
-list_of_file_esc = list()
-list_of_file_esc_lbl = list()
-
-for num, a in enumerate(esc['category']):
-    if a == 'door_wood_creaks':
-        list_of_file_esc.append(esc['filename'][num])
-        list_of_file_esc_lbl.append('door')
-    if a == 'door_wood_knock':
-        list_of_file_esc.append(esc['filename'][num])
-        list_of_file_esc_lbl.append('kd')
-    if a == 'keyboard_typing':
-        list_of_file_esc.append(esc['filename'][num])
-        list_of_file_esc_lbl.append('keyboard')
-        
-
-X = np.zeros((len(list_of_files)+120, 496,64))
+X = np.zeros((len(list_of_files), 496,64))
 
 for num, name in enumerate(list_of_files):
     samp, fr = wavfile.read(root_dir + "/audio/" + str(name))
     X[num] = preprocess_sound(fr, samp).reshape(496,64)
-    
-for num, name in enumerate(list_of_file_esc):
-    samp, fr = wavfile.read(root_dir + "/ESC-50-master/audio/" + str(name))
-    X[num+3659] = preprocess_sound(fr, samp).reshape(496,64)
     
 
 test_list = os.listdir(root_dir + "/test/")
@@ -469,7 +447,7 @@ for num, name in enumerate(test_list):
     samp, fr = wavfile.read(root_dir + "/test/" + str(name))
     X_test[num] = preprocess_sound(fr, samp).reshape(496,64)
     
-y = np.zeros((len(list_of_files)+len(list_of_file_esc_lbl), 8))
+y = np.zeros((len(list_of_files), 8))
 for num, name in enumerate(list_of_files):
     if name.split('_')[0] == 'background' or name.split('_')[1] == 'background':
         lbl = 'background'
@@ -506,29 +484,6 @@ for num, name in enumerate(list_of_files):
     elif asdf in ['tool']:
         score[7] = 1
     y[num] = score
-    
-for a in range(120):
-    score = np.zeros((8))
-    asdf = list_of_file_esc_lbl[a]
-    if asdf == 'background':
-        score[0] = 1
-    elif asdf in ['bg','bags']:
-        score[1] = 1
-    elif asdf in ['door','d']:
-        score[2] = 1
-    elif asdf in ['k', 'keyboard']:
-        score[3] = 1
-    elif asdf in ['knocking', 'kd']:
-        score[4] = 1
-    elif asdf in ['ring']:
-        score[5] = 1
-    elif asdf in ['speech']:
-        score[6] = 1
-    elif asdf in ['tool']:
-        score[7] = 1
-    y[3659+a] = score
-    
-
 
 mod_vgg = VGGish(include_top=False)
 x_d = mod_vgg.predict(X.reshape(-1,496,64,1), verbose=1)
