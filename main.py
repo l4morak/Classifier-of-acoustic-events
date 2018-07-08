@@ -311,8 +311,7 @@ def preprocess_sound(data, sample_rate):
 
 
 # weight path
-WEIGHTS_PATH = 'E:/vggish_audioset_weights_without_fc2.h5'
-WEIGHTS_PATH_TOP = 'E:/vggish_audioset_weights.h5'
+WEIGHTS_PATH = root_dir + '/vggish_audioset_weights_without_fc2.h5'
 
 def VGGish(load_weights=True, weights='audioset',
            input_tensor=None, input_shape=None,
