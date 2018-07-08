@@ -1,7 +1,7 @@
 # Classifier of Acoustic Events
 Решение задачи "Классификатор акустических событий". (файл main.py)
 
-Лучшая точность на известных объектах test выборки - 86 % (Accuracy Score); 97.5 % (ROC AUC Score - средняя для каждого класса); 87 % (Mean Average Precision).  
+Лучшая точность на известных объектах test выборки - 86 % (Accuracy Score); 97.5 % (ROC AUC Score - усредненная, вычисленная по отдельности для каждого отдельного класса); 87 % (Mean Average Precision).  
 
 Модель использует предобученные сверточные слои модели VGGish. 
 (https://github.com/tensorflow/models/tree/master/research/audioset - ссылка на оригинальный источник)
