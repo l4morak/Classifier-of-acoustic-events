@@ -20,7 +20,7 @@ import scipy
 import keras
 from scipy.io import wavfile
 from keras.models import Model, load_model
-from keras.layers import Dense, Dropout, Activation, Flatten, Input, GlobalAveragePooling2D, GlobalMaxPooling2D, Conv2D, MaxPooling2D
+from keras.layers import Dense, Dropout, Activation, Flatten, Input, GlobalAveragePooling2D, GlobalMaxPooling2D, Conv2D, MaxPooling2D, BatchNormalization, Reshape
 import sys
 from keras.engine.topology import get_source_inputs
 sys.path.append('/home/hudi/anaconda2/lib/python2.7/site-packages/h5py')
@@ -35,7 +35,9 @@ K.set_session(sess)
 
 np.random.seed(42)
 
-root_dir = "E:/AudioData"
+root_dir = "O:/AudioData"
+
+esc = pd.read_csv(root_dir + "/ESC-50-master/meta/esc50.csv")
 
 def frame(data, window_length, hop_length):
   """Convert array into a sequence of successive possibly overlapping frames.
@@ -305,105 +307,6 @@ def preprocess_sound(data, sample_rate):
   return log_mel_examples
 
 
-
-
-
-# weight path
-WEIGHTS_PATH = root_dir + '/vggish_audioset_weights_without_fc2.h5'
-
-def VGGish(load_weights=True, weights='audioset',
-           input_tensor=None, input_shape=None,
-           out_dim=None, include_top=True, pooling='avg'):
-    '''
-    An implementation of the VGGish architecture.
-
-    :param load_weights: if load weights
-    :param weights: loads weights pre-trained on a preliminary version of YouTube-8M.
-    :param input_tensor: input_layer
-    :param input_shape: input data shape
-    :param out_dim: output dimension
-    :param include_top:whether to include the 3 fully-connected layers at the top of the network.
-    :param pooling: pooling type over the non-top network, 'avg' or 'max'
-
-    :return: A Keras model instance.
-    '''
-
-    if weights not in {'audioset', None}:
-        raise ValueError('The `weights` argument should be either '
-                         '`None` (random initialization) or `audioset` '
-                         '(pre-training on audioset).')
-
-    if out_dim is None:
-        out_dim = EMBEDDING_SIZE
-
-    # input shape
-    if input_shape is None:
-        input_shape = (NUM_FRAMES, NUM_BANDS, 1)
-
-    if input_tensor is None:
-        aud_input = Input(shape=input_shape, name='input_1')
-    else:
-        if not K.is_keras_tensor(input_tensor):
-            aud_input = Input(tensor=input_tensor, shape=input_shape, name='input_1')
-        else:
-            aud_input = input_tensor
-
-
-
-    # Block 1
-    x = Conv2D(64, (3, 3), strides=(1, 1), activation='relu', padding='same', name='conv1')(aud_input)
-    x = MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool1')(x)
-
-    # Block 2
-    x = Conv2D(128, (3, 3), strides=(1, 1), activation='relu', padding='same', name='conv2')(x)
-    x = MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool2')(x)
-
-    # Block 3
-    x = Conv2D(256, (3, 3), strides=(1, 1), activation='relu', padding='same', name='conv3/conv3_1')(x)
-    x = Conv2D(256, (3, 3), strides=(1, 1), activation='relu', padding='same', name='conv3/conv3_2')(x)
-    x = MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool3')(x)
-
-    # Block 4
-    x = Conv2D(512, (3, 3), strides=(1, 1), activation='relu', padding='same', name='conv4/conv4_1')(x)
-    x = Conv2D(512, (3, 3), strides=(1, 1), activation='relu', padding='same', name='conv4/conv4_2')(x)
-    x = MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool4')(x)
-
-
-
-    if include_top:
-        # FC block
-        x = Flatten(name='flatten_')(x)
-        x = Dense(4096, activation='relu', name='vggish_fc1/fc1_1')(x)
-        x = Dense(4096, activation='relu', name='vggish_fc1/fc1_2')(x)
-        x = Dense(out_dim, activation='relu', name='vggish_fc2')(x)
-    else:
-        if pooling == 'avg':
-            x = GlobalAveragePooling2D()(x)
-        elif pooling == 'max':
-            x = GlobalMaxPooling2D()(x)
-
-
-    if input_tensor is not None:
-        inputs = get_source_inputs(input_tensor)
-    else:
-        inputs = aud_input
-    # Create model.
-    model = Model(inputs, x, name='VGGish')
-
-
-    # load weights
-    if load_weights:
-        if weights == 'audioset':
-            if include_top:
-                model.load_weights(WEIGHTS_PATH_TOP)
-            else:
-                model.load_weights(WEIGHTS_PATH)
-        else:
-            print("failed to load weights")
-
-    return model
-
-
 list_of_files = os.listdir(root_dir + "/audio/")
 a=0
 found = 0
@@ -433,6 +336,8 @@ for c in range(1000000):
     a+=1
 del list_of_files[len(list_of_files)-1]
 random.shuffle(list_of_files)
+
+        
 
 X = np.zeros((len(list_of_files), 496,64))
 
@@ -484,36 +389,107 @@ for num, name in enumerate(list_of_files):
     elif asdf in ['tool']:
         score[7] = 1
     y[num] = score
+    
 
-mod_vgg = VGGish(include_top=False)
-x_d = mod_vgg.predict(X.reshape(-1,496,64,1), verbose=1)
-data = mod_vgg.predict(X_test.reshape(-1,496,64,1), verbose=1)
+    
 
-models = list()
+y_test = np.zeros((473, 8))
+for num, name in enumerate(test_list):
+    if name.split('_')[0] == 'background':
+        lbl = 'background'
+    elif name.split('_')[0] in ['bg','bags']:
+        lbl = 'bags'
+    elif name.split('_')[0] in ['door','d']:
+        lbl = 'door'
+    elif name.split('_')[0] in ['k', 'keyboard']:
+        lbl = 'keyboard'
+    elif name.split('_')[0] in ['knocking', 'kd']:
+        lbl = 'kd'
+    elif name.split('_')[0] in ['ring']:
+        lbl = 'ring'
+    elif name.split('_')[0] in ['speech']:
+        lbl = 'speech'
+    elif name.split('_')[0] in ['tool']:
+        lbl = 'tool'
+    elif name.split('_')[0] in ['unknown']:
+        break
+    asdf = lbl
+    score = np.zeros((8))
+    if asdf == 'background':
+        score[0] = 1
+    elif asdf in ['bg','bags']:
+        score[1] = 1
+    elif asdf in ['door','d']:
+        score[2] = 1
+    elif asdf in ['k', 'keyboard']:
+        score[3] = 1
+    elif asdf in ['knocking', 'kd']:
+        score[4] = 1
+    elif asdf in ['ring']:
+        score[5] = 1
+    elif asdf in ['speech']:
+        score[6] = 1
+    elif asdf in ['tool']:
+        score[7] = 1
+    y_test[num] = score
+
 
 def model_end():
-    inp = Input((512,))
-    x = Dense(800)(inp)
-    x = Dropout(0.2)(x)
+    inp = Input((496,64,))
+    x = Reshape((496,64,1))(inp)
+    
+    # Block 1
+    x = Conv2D(64, (3, 3), strides=(1, 1), activation='relu', padding='same', name='conv1')(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool1')(x)
+
+    # Block 2
+    x = Conv2D(128, (3, 3), strides=(1, 1), activation='relu', padding='same', name='conv2')(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool2')(x)
+
+    # Block 3
+    x = Conv2D(256, (3, 3), strides=(1, 1), activation='relu', padding='same', name='conv3/conv3_1')(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(256, (3, 3), strides=(1, 1), activation='relu', padding='same', name='conv3/conv3_2')(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool3')(x)
+
+    # Block 4
+    x = Conv2D(512, (3, 3), strides=(1, 1), activation='relu', padding='same', name='conv4/conv4_1')(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(512, (3, 3), strides=(1, 1), activation='relu', padding='same', name='conv4/conv4_2')(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool4')(x)
+    x = GlobalMaxPooling2D()(x)
+
     x = Dense(800)(x)
-    x = Dropout(0.4)(x)
+    x = BatchNormalization()(x)
+    x = Dense(800)(x)
+    x = BatchNormalization()(x)
     x = Activation('relu')(x)
     x = Dense(8)(x)
+    
     x = Activation('softmax')(x)
     model = Model(inputs = inp, outputs=x)
-    adam = keras.optimizers.Adam(lr=0.0008, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.00, amsgrad=False)
+    adam = keras.optimizers.Adamax(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.00)
     model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
-    model_checkpoint = keras.callbacks.ModelCheckpoint(root_dir + "/model.hdf5", monitor='val_acc', verbose=0, save_best_only=True)
-    model.fit(x_d, y, verbose=0, epochs=10, batch_size=40, validation_split=0.1, callbacks=[model_checkpoint])
+    model_checkpoint = keras.callbacks.ModelCheckpoint(root_dir + "/model.hdf5", monitor='val_loss', verbose=1, save_best_only=True)
+    model.fit(X, y, verbose=1, epochs=55, batch_size=16, validation_split=0.08, callbacks=[model_checkpoint])
     return model
 
+model = model_end()
+
+from sklearn.metrics import accuracy_score as metr
+
+models = list()
 preds = np.zeros((610,8))
-for a in range(10):
+for a in range(3):
     model_end()
     models.append(load_model(root_dir + "/model.hdf5"))
-    preds += models[a].predict(data)
+    preds += models[a].predict(X_test)
     
-preds /= 10
+preds /= 3
 
 f = open(root_dir + '/result.txt', 'w')
 for num, song in enumerate(test_list):
