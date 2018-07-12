@@ -392,7 +392,7 @@ for num, name in enumerate(list_of_files):
    
 
 def monitor(y_true, y_pred):
-    return keras.metrics.categorical_accuracy(y_true, y_pred) * 1-(keras.losses.categorical_crossentropy(y_true, y_pred))
+    return keras.metrics.categorical_accuracy(y_true, y_pred) * (1-keras.losses.categorical_crossentropy(y_true, y_pred))
 
 def model_end():
     inp = Input((496,64,))
@@ -433,10 +433,9 @@ def model_end():
     model = Model(inputs = inp, outputs=x)
     adam = keras.optimizers.Adamax(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.00)
     model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy',monitor])
-    model_checkpoint = keras.callbacks.ModelCheckpoint(root_dir + "/model.hdf5", monitor='monitor', verbose=1, save_best_only=True)
+    model_checkpoint = keras.callbacks.ModelCheckpoint(root_dir + "/model.hdf5", monitor='val_monitor', mode='max', verbose=1, save_best_only=True)
     model.fit(X, y, verbose=1, epochs=55, batch_size=16, validation_split=0.08, callbacks=[model_checkpoint])
     return model
-
 
 models = list()
 preds = np.zeros((610,8))
