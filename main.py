@@ -389,50 +389,10 @@ for num, name in enumerate(list_of_files):
     elif asdf in ['tool']:
         score[7] = 1
     y[num] = score
-    
+   
 
-    
-
-y_test = np.zeros((473, 8))
-for num, name in enumerate(test_list):
-    if name.split('_')[0] == 'background':
-        lbl = 'background'
-    elif name.split('_')[0] in ['bg','bags']:
-        lbl = 'bags'
-    elif name.split('_')[0] in ['door','d']:
-        lbl = 'door'
-    elif name.split('_')[0] in ['k', 'keyboard']:
-        lbl = 'keyboard'
-    elif name.split('_')[0] in ['knocking', 'kd']:
-        lbl = 'kd'
-    elif name.split('_')[0] in ['ring']:
-        lbl = 'ring'
-    elif name.split('_')[0] in ['speech']:
-        lbl = 'speech'
-    elif name.split('_')[0] in ['tool']:
-        lbl = 'tool'
-    elif name.split('_')[0] in ['unknown']:
-        break
-    asdf = lbl
-    score = np.zeros((8))
-    if asdf == 'background':
-        score[0] = 1
-    elif asdf in ['bg','bags']:
-        score[1] = 1
-    elif asdf in ['door','d']:
-        score[2] = 1
-    elif asdf in ['k', 'keyboard']:
-        score[3] = 1
-    elif asdf in ['knocking', 'kd']:
-        score[4] = 1
-    elif asdf in ['ring']:
-        score[5] = 1
-    elif asdf in ['speech']:
-        score[6] = 1
-    elif asdf in ['tool']:
-        score[7] = 1
-    y_test[num] = score
-
+def monitor(y_true, y_pred):
+    return keras.metrics.categorical_accuracy(y_true, y_pred) * 1-(keras.losses.categorical_crossentropy(y_true, y_pred))
 
 def model_end():
     inp = Input((496,64,))
@@ -473,14 +433,11 @@ def model_end():
     x = Activation('softmax')(x)
     model = Model(inputs = inp, outputs=x)
     adam = keras.optimizers.Adamax(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.00)
-    model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
-    model_checkpoint = keras.callbacks.ModelCheckpoint(root_dir + "/model.hdf5", monitor='val_loss', verbose=1, save_best_only=True)
+    model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy',monitor])
+    model_checkpoint = keras.callbacks.ModelCheckpoint(root_dir + "/model.hdf5", monitor='monitor', verbose=1, save_best_only=True)
     model.fit(X, y, verbose=1, epochs=55, batch_size=16, validation_split=0.08, callbacks=[model_checkpoint])
     return model
 
-model = model_end()
-
-from sklearn.metrics import accuracy_score as metr
 
 models = list()
 preds = np.zeros((610,8))
