@@ -429,7 +429,6 @@ def model_end():
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
     x = Dense(8)(x)
-    
     x = Activation('softmax')(x)
     model = Model(inputs = inp, outputs=x)
     adam = keras.optimizers.Adamax(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.00)
