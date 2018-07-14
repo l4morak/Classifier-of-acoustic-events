@@ -1,7 +1,7 @@
 # Classifier of Acoustic Events
 Решение задачи "Классификатор акустических событий". (файл main.py)
 
-Лучшая точность на известных объектах test выборки - 95 % (Accuracy Score);
+Лучшая точность на известных объектах test выборки - ~95.7 % (Accuracy Score);
 
 Модель использует сверточные слои модели VGGish. 
 (https://github.com/tensorflow/models/tree/master/research/audioset - ссылка на оригинальный источник)  
